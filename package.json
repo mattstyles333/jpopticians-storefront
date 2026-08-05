@@ -1,0 +1,19 @@
+{
+  "name": "jpopticians-storefront",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "workspaces": [
+    "packages/*",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace web",
+    "build": "npm run build --workspace web",
+    "start": "npm run start --workspace web",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "verify": "npm run verify --workspaces --if-present"
+  }
+}

@@ -1,0 +1,35 @@
+import type { LensOptionGroup } from '../../types';
+
+export const lensDesignGroup: LensOptionGroup = {
+  title: 'Lens level',
+  required: true,
+  type: 'radio',
+  magentoCode: 'lens_design',
+  options: [
+    {
+      id: 'sv-distance-standard',
+      title: 'Standard Distance',
+      description: 'Straightforward single-vision distance lens.',
+      price: 10,
+      showWhen: { type: 'selected', option: 'distance' },
+      magentoCode: 'lens_design',
+    },
+    { id: 'sv-distance-freeform', title: 'Freeform Distance', description: 'Higher-precision distance lens with improved clarity.', price: 55, showWhen: { type: 'selected', option: 'distance' }, magentoCode: 'lens_design' },
+    { id: 'sv-reading-standard', title: 'Standard Reading', description: 'Single-vision reading lens for close work.', price: 20, showWhen: { type: 'selected', option: 'reading' }, magentoCode: 'lens_design' },
+    { id: 'sv-reading-freeform', title: 'Freeform Reading', description: 'Sharper near-zone reading lens for frequent close work.', price: 45, showWhen: { type: 'selected', option: 'reading' }, magentoCode: 'lens_design' },
+    { id: 'sv-intermediate-standard', title: 'Standard Intermediate', description: 'Single-vision lens tuned for screen distance.', price: 25, showWhen: { type: 'selected', option: 'intermediate' }, magentoCode: 'lens_design' },
+    { id: 'sv-intermediate-freeform', title: 'Freeform Intermediate', description: 'A wider, more refined intermediate design.', price: 50, showWhen: { type: 'selected', option: 'intermediate' }, magentoCode: 'lens_design' },
+    { id: 'bifocal-d28', title: 'D28 Bifocal', description: 'Traditional D-segment bifocal.', price: 40, showWhen: { type: 'selected', option: 'bifocal' }, magentoCode: 'lens_design' },
+    { id: 'bifocal-r28', title: 'R28 Bifocal', description: 'Round 28 bifocal segment.', price: 45, showWhen: { type: 'selected', option: 'bifocal' }, magentoCode: 'lens_design' },
+    { id: 'bifocal-executive', title: 'Executive Bifocal', description: 'A full-width reading section.', price: 55, showWhen: { type: 'selected', option: 'bifocal' }, magentoCode: 'lens_design' },
+    { id: 'varifocal-standard', title: 'Standard Varifocal', description: 'A good entry-level varifocal lens.', price: 70, showWhen: { type: 'selected', option: 'varifocal' }, magentoCode: 'lens_design' },
+    { id: 'varifocal-premium', title: 'Premium Varifocal', description: 'Wider visual fields and easier adaptation.', price: 120, showWhen: { type: 'selected', option: 'varifocal' }, magentoCode: 'lens_design' },
+    { id: 'varifocal-elite', title: 'Elite Varifocal', description: 'The smoothest premium varifocal option.', price: 170, showWhen: { type: 'selected', option: 'varifocal' }, magentoCode: 'lens_design' },
+    { id: 'zeiss-varifocal', title: 'ZEISS Varifocal', description: 'ZEISS branded varifocal option.', price: 155, showWhen: { type: 'selected', option: 'varifocal' }, magentoCode: 'lens_design' },
+    { id: 'essilor-varifocal', title: 'Essilor Varifocal', description: 'Essilor branded varifocal option.', price: 155, showWhen: { type: 'selected', option: 'varifocal' }, magentoCode: 'lens_design' },
+    { id: 'occupational-standard', title: 'Standard Occupational', description: 'Balanced desk and room-distance design.', price: 85, showWhen: { type: 'selected', option: 'occupational' }, magentoCode: 'lens_design' },
+    { id: 'occupational-premium', title: 'Premium Occupational', description: 'Wider intermediate and room-viewing zones.', price: 135, showWhen: { type: 'selected', option: 'occupational' }, magentoCode: 'lens_design' },
+    { id: 'zeiss-occupational', title: 'ZEISS Occupational', description: 'ZEISS office and room-distance design.', price: 145, showWhen: { type: 'selected', option: 'occupational' }, magentoCode: 'lens_design' },
+    { id: 'essilor-occupational', title: 'Essilor Occupational', description: 'Essilor office and room-distance design.', price: 145, showWhen: { type: 'selected', option: 'occupational' }, magentoCode: 'lens_design' },
+  ],
+};
