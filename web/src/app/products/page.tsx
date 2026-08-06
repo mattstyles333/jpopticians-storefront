@@ -1,9 +1,14 @@
-import type { Metadata } from "next"
+"use client"
+
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 import { ProductCard } from "@/components/ProductCard"
 import { formatMoney } from "@/lib/format"
 import { minVariantPrice } from "@/lib/medusa"
+import type { StoreProduct, StoreCategory } from "@/lib/medusa"
 import {
   getCategoryByHandle,
   listCategories,
@@ -11,11 +16,6 @@ import {
   sortProducts,
   type SortKey,
 } from "@/lib/queries"
-
-export const metadata: Metadata = {
-  title: "Glasses",
-  description: "Browse optical, sunglasses and sports frames at JPOpticians.",
-}
 
 const SORTS: Array<{ value: SortKey; label: string }> = [
   { value: "featured", label: "Featured" },
@@ -25,30 +25,36 @@ const SORTS: Array<{ value: SortKey; label: string }> = [
   { value: "title", label: "Alphabetical" },
 ]
 
-function first(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value
-}
+function ProductsContent() {
+  const searchParams = useSearchParams()
+  const [categories, setCategories] = useState<StoreCategory[]>([])
+  const [products, setProducts] = useState<StoreProduct[]>([])
+  const [count, setCount] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-interface PageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
+  const q = searchParams.get("q")?.trim() ?? ""
+  const categoryHandle = searchParams.get("category") ?? ""
+  const sort = (searchParams.get("sort") ?? "featured") as SortKey
 
-export default async function ProductsPage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const q = first(params.q)?.trim() ?? ""
-  const categoryHandle = first(params.category) ?? ""
-  const sort = (first(params.sort) ?? "featured") as SortKey
+  useEffect(() => {
+    async function load() {
+      const [cats, activeCategory] = await Promise.all([
+        listCategories(),
+        categoryHandle ? getCategoryByHandle(categoryHandle) : Promise.resolve(null),
+      ])
+      setCategories(cats)
 
-  const [categories, activeCategory] = await Promise.all([
-    listCategories(),
-    categoryHandle ? getCategoryByHandle(categoryHandle) : Promise.resolve(null),
-  ])
-
-  const { products, count } = await listProducts({
-    q: q || undefined,
-    categoryId: activeCategory?.id,
-    limit: 100,
-  })
+      const result = await listProducts({
+        q: q || undefined,
+        categoryId: activeCategory?.id,
+        limit: 100,
+      })
+      setProducts(result.products)
+      setCount(result.count)
+      setLoading(false)
+    }
+    load()
+  }, [q, categoryHandle])
 
   const sorted = sortProducts(products, sort)
 
@@ -57,11 +63,15 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            {activeCategory ? activeCategory.name : q ? `Results for "${q}"` : "Glasses"}
+            {categoryHandle
+              ? categories.find((c) => c.handle === categoryHandle)?.name ?? "Category"
+              : q
+                ? `Results for "${q}"`
+                : "Glasses"}
           </h1>
           <p className="mt-1 text-sm text-zinc-600">
-            {count} product{count === 1 ? "" : "s"}
-            {activeCategory ? ` in ${activeCategory.name}` : ""}
+            {loading ? "Loading..." : `${count} product${count === 1 ? "" : "s"}`}
+            {categoryHandle ? ` in ${categories.find((c) => c.handle === categoryHandle)?.name ?? ""}` : ""}
           </p>
         </div>
 
@@ -135,7 +145,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         </aside>
 
         {/* Grid */}
-        {sorted.length === 0 ? (
+        {loading ? (
+          <div className="rounded-2xl border border-dashed border-zinc-300 p-16 text-center">
+            <p className="font-medium text-zinc-900">Loading products...</p>
+          </div>
+        ) : sorted.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 p-16 text-center">
             <p className="font-medium text-zinc-900">No products found</p>
             <p className="mt-1 text-sm text-zinc-600">
@@ -152,10 +166,20 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       </div>
 
       {/* Price summary helper for screen readers */}
-      <p className="sr-only">
-        Prices shown from{" "}
-        {formatMoney(Math.min(...sorted.map((p) => minVariantPrice(p) ?? 0)))}.
-      </p>
+      {sorted.length > 0 && (
+        <p className="sr-only">
+          Prices shown from{" "}
+          {formatMoney(Math.min(...sorted.map((p) => minVariantPrice(p) ?? 0)))}.
+        </p>
+      )}
     </div>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-6xl px-4 py-10 text-center"><p className="text-sm text-zinc-500">Loading...</p></div>}>
+      <ProductsContent />
+    </Suspense>
   )
 }

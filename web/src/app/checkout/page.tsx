@@ -150,7 +150,7 @@ export default function CheckoutPage() {
       if (result.order) {
         // clear the persisted cart id now that an order exists
         window.localStorage.removeItem("jpopt.cartId")
-        router.push(`/order/${result.order.id}`)
+        router.push(`/order?id=${result.order.id}`)
         return
       }
       setNotice("Your order was placed but we could not load the confirmation.")

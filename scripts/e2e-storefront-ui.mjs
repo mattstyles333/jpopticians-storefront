@@ -76,7 +76,7 @@ try {
 
   // 7. Place order — wait for navigation to order confirmation
   await page.locator("button", { hasText: "Place order" }).first().click()
-  await page.waitForURL("**/order/**", { timeout: 30000 })
+  await page.waitForURL("**/order*", { timeout: 30000 })
   const confirmationShown = await page.locator("text=Order confirmed").isVisible()
   check("order confirmation page shown", confirmationShown)
 

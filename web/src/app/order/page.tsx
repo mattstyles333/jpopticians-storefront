@@ -2,20 +2,24 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 import { formatDate, formatMoney } from "@/lib/format"
 import { sdk } from "@/lib/medusa"
 import type { StoreOrder } from "@/lib/medusa"
 
-export default function OrderPage() {
-  const params = useParams()
-  const id = params.id as string
+function OrderContent() {
+  const searchParams = useSearchParams()
+  const id = searchParams.get("id")
   const [order, setOrder] = useState<StoreOrder | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!id) return
+    if (!id) {
+      setLoading(false)
+      return
+    }
     sdk.store.order
       .retrieve(id, {
         fields:
@@ -37,7 +41,7 @@ export default function OrderPage() {
     )
   }
 
-  if (!order) {
+  if (!id || !order) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-14 text-center">
         <h1 className="text-2xl font-semibold text-zinc-900">Order not found</h1>
@@ -122,5 +126,13 @@ export default function OrderPage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function OrderPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-3xl px-4 py-14 text-center"><p className="text-sm text-zinc-500">Loading...</p></div>}>
+      <OrderContent />
+    </Suspense>
   )
 }

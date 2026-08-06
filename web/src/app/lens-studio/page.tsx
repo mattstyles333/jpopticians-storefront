@@ -1,43 +1,43 @@
-import type { Metadata } from "next"
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 import { LensStudioClient } from "@/components/lens/LensStudioClient"
 import { STANDARD_LENS_PRICE_MAJOR } from "@/lib/env"
 import { variantPriceMinor } from "@/lib/medusa"
+import type { StoreProduct } from "@/lib/medusa"
 import { normalizeFrameType, type LensStudioFrame } from "@/lib/lens"
 import { listProducts } from "@/lib/queries"
-
-export const metadata: Metadata = {
-  title: "Lens Studio",
-  description:
-    "Add prescription lenses to your JPOpticians frame, glazed in our UK lab.",
-}
 
 function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
-interface PageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
+function LensStudioContent() {
+  const searchParams = useSearchParams()
+  const [products, setProducts] = useState<StoreProduct[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default async function LensStudioPage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const mode = first(params.mode) === "reglaze" ? "reglaze" : "frame"
-  const frameSku = first(params.frame_sku)?.trim() ?? ""
-  const lensProductSku = first(params.lens_product_sku)?.trim() ?? "LENS-STANDARD"
+  useEffect(() => {
+    listProducts({ limit: 100 })
+      .then(({ products }) => setProducts(products))
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false))
+  }, [])
 
-  const { products } = await listProducts({ limit: 100 })
+  const mode = searchParams.get("mode") === "reglaze" ? "reglaze" : "frame"
+  const frameSku = (searchParams.get("frame_sku") ?? "").trim()
+  const lensProductSku = (searchParams.get("lens_product_sku") ?? "").trim() || "LENS-STANDARD"
 
-  // Locate the lens product (e.g. LENS-STANDARD) and the chosen frame variant.
   const lensProduct = products.find((p) =>
     (p.variants ?? []).some((v) => v.sku === lensProductSku)
   )
   const lensVariant = lensProduct?.variants?.find((v) => v.sku === lensProductSku)
   const lensVariantId = lensVariant?.id ?? null
-  // The configured standard lens price carries the price (the Medusa lens
-  // product itself is priced at 0).
   const lensBasePriceMinor = STANDARD_LENS_PRICE_MAJOR * 100
 
   const frameProduct = frameSku
@@ -50,17 +50,17 @@ export default async function LensStudioPage({ searchParams }: PageProps) {
     ? {
         sku: frameSku,
         name:
-          first(params.frame_name) ??
+          searchParams.get("frame_name") ??
           frameVariant?.title
             ? `${frameProduct?.title ?? "Frame"}${frameVariant?.title ? ` - ${frameVariant.title}` : ""}`
             : (frameProduct?.title ?? "Frame"),
-        imageUrl: first(params.frame_image) ?? frameProduct?.thumbnail ?? null,
-        frameType: normalizeFrameType(first(params.frame_type) ?? "full-rim"),
+        imageUrl: searchParams.get("frame_image") ?? frameProduct?.thumbnail ?? null,
+        frameType: normalizeFrameType(searchParams.get("frame_type") ?? "full-rim"),
         framePrice:
           frameVariant && variantPriceMinor(frameVariant) !== null
             ? (variantPriceMinor(frameVariant) as number) / 100
-            : first(params.frame_price)
-              ? Number(first(params.frame_price)) || null
+            : searchParams.get("frame_price")
+              ? Number(searchParams.get("frame_price")) || null
               : null,
         lensProductSku,
         source: mode,
@@ -152,14 +152,14 @@ export default async function LensStudioPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      {!frame && products.length === 0 && (
+      {!frame && !loading && products.length === 0 && (
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
               className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-zinc-300 text-sm text-zinc-400"
             >
-              Frames loading…
+              No frames available
             </div>
           ))}
         </div>
@@ -172,5 +172,13 @@ export default async function LensStudioPage({ searchParams }: PageProps) {
         </p>
       )}
     </div>
+  )
+}
+
+export default function LensStudioPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-6xl px-4 py-10 text-center"><p className="text-sm text-zinc-500">Loading lens studio...</p></div>}>
+      <LensStudioContent />
+    </Suspense>
   )
 }
