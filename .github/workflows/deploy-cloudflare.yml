@@ -1,0 +1,40 @@
+name: Deploy storefront to Cloudflare Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js static export
+        run: npm run build
+        env:
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${{ vars.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 'https://jpopt.medusajs.app' }}
+          NEXT_PUBLIC_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_PUBLISHABLE_KEY || 'pk_38da8a650cfb33534d57466026eccf86978781559d4f6d03143520285e3dca54' }}
+          NEXT_PUBLIC_REGION_ID: ${{ vars.NEXT_PUBLIC_REGION_ID || 'reg_01KZ8VZGNTKD9M36PYM34C6MJ3' }}
+          NEXT_PUBLIC_STANDARD_LENS_PRICE: ${{ vars.NEXT_PUBLIC_STANDARD_LENS_PRICE || '99' }}
+          NODE_ENV: production
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy web/out --project-name=jpopticians-storefront
